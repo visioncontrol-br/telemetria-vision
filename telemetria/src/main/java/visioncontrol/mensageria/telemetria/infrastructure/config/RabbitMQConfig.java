@@ -22,7 +22,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue queue(){
-        return new Queue("dados-telemetria", true);
+        return new Queue(queue, true);
     }
 
     @Bean
@@ -45,7 +45,7 @@ public class RabbitMQConfig {
     @Bean
     public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory){
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.convertAndSend(Messageconverter());
+        template.setMessageConverter(Messageconverter());
         return template;
     }
 }
