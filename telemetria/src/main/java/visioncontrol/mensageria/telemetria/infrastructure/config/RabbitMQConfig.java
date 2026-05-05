@@ -13,48 +13,49 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     @Value("${rabbitmq.queue.name}")
-    private String queue;
+    private String queueName;
 
     @Value("${rabbitmq.exchange.name}")
-    private String exchange;
+    private String exchangeName;
 
     @Value("${rabbitmq.routingkey.name}")
     private String routingKey;
 
     @Bean
-    public Queue queue(){
-        return new Queue(queue, true);
+    public Queue queue() {
+        // O "true" indica que a fila é durável (não some se o RabbitMQ reiniciar)
+        return new Queue(queueName, true);
     }
 
     @Bean
-    public DirectExchange exchange(){
-        return new DirectExchange(exchange);
+    public DirectExchange exchange() {
+        return new DirectExchange(exchangeName);
     }
 
     @Bean
-    public Binding binding(Queue queue, DirectExchange exchange){
+    public Binding binding(Queue queue, DirectExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
                 .with(routingKey);
     }
 
     @Bean
-    public Jackson2JsonMessageConverter Messageconverter(){
+    public Jackson2JsonMessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
     @Bean
-    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory){
+    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(Messageconverter());
+        template.setMessageConverter(messageConverter());
         return template;
     }
 
     @Bean
     public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory);
+        // Isso força o Spring a criar a Exchange, a Fila e o Binding logo que a aplicação sobe
         admin.setAutoStartup(true);
         return admin;
     }
-    
 }

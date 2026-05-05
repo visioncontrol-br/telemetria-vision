@@ -20,7 +20,7 @@ public class TelemetriaController {
     @PostMapping
     public ResponseEntity<Void> enviaDados(@RequestBody Map<String, Object> dados) {
         // Envia para a exchange que você configurou
-        rabbitTemplate.convertAndSend("exchange", "routingKey", dados);
+        rabbitTemplate.convertAndSend("telemetria.exchange", "telemetria.routingkey", dados);
         return ResponseEntity.ok().build();
     }
 

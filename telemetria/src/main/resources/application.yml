@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: telemetria
+
   datasource:
     url: jdbc:postgresql://postgres-mensageria:5432/mensageria
     username: postgres
@@ -15,11 +18,11 @@ spring:
     password: ${RABBITMQ_PASSWORD}
     virtual-host: /
 
-# ADICIONE ESTE BLOCO ABAIXO (Fora do bloco spring:)
+# Variáveis customizadas que o @Value irá ler na sua classe RabbitMQConfig
 rabbitmq:
   queue:
-    name: telemetria.queue
+    name: visioncontrol_queue
   exchange:
-    name: telemetria.exchange
+    name: telemetria.exchange  # AQUI ESTÁ A CORREÇÃO DO SEU ERRO 404!
   routingkey:
-    name: telemetria.routing.key
+    name: telemetria.routingkey
