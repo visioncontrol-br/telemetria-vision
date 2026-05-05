@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://db.supabase.co:5432/postgres
+    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/mensageria
     username: postgres
     password: ${DB_PASSWORD}
 
@@ -12,8 +12,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    host: ${RABBITMQ_HOST}
+    host: mensageria_rabbitmq
     port: 5672
-    username: ${RABBITMQ_USER}
+    username: admin
     password: ${RABBITMQ_PASSWORD}
-
+    virtual-host: /
