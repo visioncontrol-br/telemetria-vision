@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://82.29.61.141:5432/mensageria
+    # Use o nome do serviço que aparece na sua barra lateral
+    url: jdbc:postgresql://postgres-mensageria:5432/mensageria
     username: postgres
     password: ${DB_PASSWORD}
 
@@ -12,7 +13,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    host: 82.29.61.141
+    # Use o nome do serviço RabbitMQ do seu painel
+    host: rabbitmq
     port: 5672
     username: admin
     password: ${RABBITMQ_PASSWORD}
