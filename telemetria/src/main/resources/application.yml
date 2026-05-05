@@ -1,6 +1,5 @@
 spring:
   datasource:
-    # Use o nome do serviço que aparece na sua barra lateral
     url: jdbc:postgresql://postgres-mensageria:5432/mensageria
     username: postgres
     password: ${DB_PASSWORD}
@@ -8,14 +7,19 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    # Use o nome do serviço RabbitMQ do seu painel
     host: rabbitmq
     port: 5672
     username: admin
     password: ${RABBITMQ_PASSWORD}
     virtual-host: /
+
+# ADICIONE ESTE BLOCO ABAIXO (Fora do bloco spring:)
+rabbitmq:
+  queue:
+    name: telemetria.queue
+  exchange:
+    name: telemetria.exchange
+  routingkey:
+    name: telemetria.routing.key
