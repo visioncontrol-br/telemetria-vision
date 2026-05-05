@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/mensageria
+    url: jdbc:postgresql://82.29.61.141:5432/mensageria
     username: postgres
     password: ${DB_PASSWORD}
 
@@ -12,7 +12,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    host: mensageria_rabbitmq
+    host: 82.29.61.141
     port: 5672
     username: admin
     password: ${RABBITMQ_PASSWORD}
