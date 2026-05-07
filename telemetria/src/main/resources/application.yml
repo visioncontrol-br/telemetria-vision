@@ -1,28 +1,21 @@
 spring:
-  application:
-    name: telemetria
-
   datasource:
-    url: jdbc:postgresql://postgres-mensageria:5432/mensageria
+    url: jdbc:postgresql://db.dmmdgekpwabkaitjwgkr.supabase.co:5432/postgres
     username: postgres
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
 
   jpa:
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    host: rabbitmq
+    host: mensageria_rabbitmq
     port: 5672
     username: admin
     password: ${RABBITMQ_PASSWORD}
     virtual-host: /
-
-# Variáveis customizadas que o @Value irá ler na sua classe RabbitMQConfig
-rabbitmq:
-  queue:
-    name: visioncontrol_queue
-  exchange:
-    name: telemetria.exchange  # AQUI ESTÁ A CORREÇÃO DO SEU ERRO 404!
-  routingkey:
-    name: telemetria.routingkey

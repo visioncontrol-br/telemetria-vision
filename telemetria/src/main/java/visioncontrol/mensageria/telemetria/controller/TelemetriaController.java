@@ -1,6 +1,7 @@
 package visioncontrol.mensageria.telemetria.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -11,17 +12,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.Map;
 
 @Controller
+@RequestMapping("/webhook")
 @RequiredArgsConstructor
-@RequestMapping("/telemetria")
+@Slf4j
 public class TelemetriaController {
 
     public final RabbitTemplate rabbitTemplate;
 
-    @PostMapping
-    public ResponseEntity<Void> enviaDados(@RequestBody Map<String, Object> dados) {
-        // Envia para a exchange que você configurou
-        rabbitTemplate.convertAndSend("telemetria.exchange", "telemetria.routingkey", dados);
-        return ResponseEntity.ok().build();
+    @PostMapping("/rastreamos")
+    public ResponseEntity<String> receberWebHook (@RequestBody String payload) {
+        log.info("Webhook recebido, publicando na fila...");
+
+        rabbitTemplate.convertAndSend("dados-telemetria", payload);
+
+        log.info("Dado publicado na fila!");
+        return ResponseEntity.ok("recebido");
     }
 
 }
