@@ -1,12 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/visioncontrol
+    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/mensageria
     username: postgres
     password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
