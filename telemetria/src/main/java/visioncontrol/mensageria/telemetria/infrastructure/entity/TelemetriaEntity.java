@@ -18,7 +18,7 @@ public class TelemetriaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @Column(columnDefinition = "TEXT")
     private String payload;
