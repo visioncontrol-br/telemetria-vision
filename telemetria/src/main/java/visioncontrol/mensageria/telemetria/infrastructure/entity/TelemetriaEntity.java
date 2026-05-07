@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 public class TelemetriaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(columnDefinition = "TEXT")
     private String payload;
