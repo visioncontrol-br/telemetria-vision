@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/mensageria
+    url: jdbc:postgresql://mensageria_postgres-mensageria:5432/visioncontrol
     username: postgres
     password: ${DB_PASSWORD}
 
