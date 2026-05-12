@@ -1,21 +1,21 @@
-package visioncontrol.mensageria.telemetria.infrastructure.config;
+    package visioncontrol.mensageria.telemetria.infrastructure.config;
 
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+    import org.springframework.amqp.core.Queue;
+    import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+    import org.springframework.amqp.support.converter.MessageConverter;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class RabbitMQConfig {
+    @Configuration
+    public class RabbitMQConfig {
 
-    @Bean
-    public Queue queue(){
-        return new Queue("dados-telemetria", true);
+        @Bean
+        public Queue queue(){
+            return new Queue("dados-telemetria", true);
+        }
+
+        @Bean
+        public MessageConverter messageConverter(){
+            return new Jackson2JsonMessageConverter();
+        }
     }
-
-    @Bean
-    public MessageConverter messageConverter(){
-        return new Jackson2JsonMessageConverter();
-    }
-}
