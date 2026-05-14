@@ -6,9 +6,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+    show-sql: true
   rabbitmq:
     host: 10.11.0.37
     port: 5672
     username: admin
-    password: ${RABBITMQ_PASSWORD}
+    password: visioncontrolrabbit
     virtual-host: /
