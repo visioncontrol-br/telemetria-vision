@@ -1,18 +1,13 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
+    url: jdbc:postgresql://db.dmmdgekpwabkaitjwgkr.supabase.co:5432/postgres?sslmode=require
+    username: postgres
+    password: Ma060507@
   jpa:
     hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
+      ddl-auto: none
   rabbitmq:
-    host: mensageria_rabbitmq
+    host: 10.11.0.37
     port: 5672
     username: admin
     password: ${RABBITMQ_PASSWORD}

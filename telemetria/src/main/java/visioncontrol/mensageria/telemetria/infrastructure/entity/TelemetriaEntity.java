@@ -1,30 +1,21 @@
 package visioncontrol.mensageria.telemetria.infrastructure.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "telemetria")
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
+@Getter
+@Setter
 public class TelemetriaEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-
-    @Column(columnDefinition = "TEXT")
+    private UUID id;
     private String payload;
-
-    @Column(name = "data_recebimento")
-    @CreationTimestamp
     private LocalDateTime dataRecebimento;
-
+    // getters e setters
 }
