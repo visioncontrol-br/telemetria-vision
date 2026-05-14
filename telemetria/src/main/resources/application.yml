@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://db.dmmdgekpwabkaitjwgkr.supabase.co:5432/postgres?sslmode=require
+    url: jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?user=postgres.dmmdgekpwabkaitjwgkr&password=[YOUR-PASSWORD]
     username: postgres
     password: Ma060507@
   jpa:
