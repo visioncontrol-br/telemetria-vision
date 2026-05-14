@@ -14,7 +14,7 @@ public class TelemetriaConsumer {
 
     private final TelemetriaRepository repository;
 
-    @RabbitListener(queues = "rastreamos.entrada")
+    @RabbitListener(queues = "dados-telemetria")
     public void receber(String payload) {
         log.info("Mensagem recebida: {}", payload);
         TelemetriaEntity entity = new TelemetriaEntity();

@@ -24,7 +24,7 @@ public class TelemetriaController {
     public ResponseEntity<String> receberWebHook (@RequestBody String payload) {
         log.info("Webhook recebido, publicando na fila...");
 
-        rabbitTemplate.convertAndSend("rastreamos.entrada", payload);
+        rabbitTemplate.convertAndSend("dados-telemetria", payload);
 
         log.info("Dado publicado na fila!");
         return ResponseEntity.ok("recebido");
