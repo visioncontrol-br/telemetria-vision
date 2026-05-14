@@ -17,5 +17,6 @@ public class TelemetriaEntity {
     private UUID id;
     private String payload;
     private LocalDateTime dataRecebimento;
-    // getters e setters
+
+
 }
