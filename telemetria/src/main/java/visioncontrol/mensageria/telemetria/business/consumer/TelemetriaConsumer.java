@@ -19,6 +19,6 @@ public class TelemetriaConsumer {
         log.info("Mensagem recebida: {}", payload);
         TelemetriaEntity entity = new TelemetriaEntity();
         entity.setPayload(payload);
-        repository.save(entity);
+        //repository.save(entity);
     }
 }

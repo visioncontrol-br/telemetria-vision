@@ -1,16 +1,45 @@
 spring:
   datasource:
-    url: jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require
-    username: postgres.dmmdgekpwabkaitjwgkr
-    password: Ma060507@
+    # URL limpa, apenas com o host, banco e sslmode
+    url: "jdbc:postgresql://aws-1-us-west-2.pooler.supabase.com:5432/postgres?sslmode=require"
+
+    # Credenciais explícitas e entre aspas para o Spring Boot não cortar a string
+    username: "postgres.swvuvmmtvasvnzilxqxl"
+    password: "Ma060507_DB2026"
+
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      pool-name: VisionControlHikariPool
+      maximum-pool-size: 15
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 20000
+
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
   rabbitmq:
-    host: 10.11.0.37
+    host: 82.29.61.141
     port: 5672
-    username: admin
-    password: visioncontrolrabbit
+    username: "admin"
+    password: "visioncontrolrabbit"
     virtual-host: /
+    listener:
+      simple:
+        concurrency: 2
+        max-concurrency: 5
+
+app:
+  rabbitmq:
+    queue: rastreamos.entrada
+
+server:
+  port: 0
