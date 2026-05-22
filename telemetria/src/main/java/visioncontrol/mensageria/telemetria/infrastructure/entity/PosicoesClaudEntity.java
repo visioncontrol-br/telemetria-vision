@@ -19,7 +19,7 @@ public class PosicoesClaudEntity {
     private UUID id;
 
     @Column(name = "empresa_id", nullable = false)
-    private UUID companyId;
+    private Integer empresaId;
 
     @Column(nullable = false)
     private String plate;

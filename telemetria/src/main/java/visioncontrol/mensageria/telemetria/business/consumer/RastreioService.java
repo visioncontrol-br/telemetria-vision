@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class TelemetriaService {
+public class RastreioService {
 
     private final VeiculosRepository veiculoRepository;
 
@@ -38,7 +38,7 @@ public class TelemetriaService {
 
         // 2. Montar o objeto correspondente à tabela posicoes_claud
         PosicoesClaudEntity posicao = new PosicoesClaudEntity();
-        posicao.setCompanyId(veiculo.getEmpresaId()); // Herdado do veículo encontrado
+        posicao.setEmpresaId(veiculo.getEmpresaId()); // Herdado do veículo encontrado
         posicao.setPlate(placa);
         posicao.setEvent(evento);
         posicao.setIgnition(ignicao);

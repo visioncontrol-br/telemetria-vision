@@ -4,24 +4,21 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Entity
-@Table(name = "veiculos")
+@Table(name = "veiculos", schema = "public")
 @Getter
 @Setter
 public class VeiculosEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @Column(name = "empresa_id", nullable = false)
-    private UUID empresaId;
+    private Integer empresaId;
 
-    @Column(name = "plate", nullable = false, unique = true)
+    @Column(name = "placa", nullable = false, unique = true)
     private String plate;
 
     private String modelo;
-
 }

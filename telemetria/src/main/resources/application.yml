@@ -1,14 +1,14 @@
 spring:
   datasource:
-    # URL limpa, apenas com o host, banco e sslmode
-    url: "jdbc:postgresql://aws-1-us-west-2.pooler.supabase.com:5432/postgres?sslmode=require"
+    # 1. Mudamos a porta de 5432 para 6543 (Porta oficial do Pooler IPv4 do Supabase)
+    # 2. Mantemos o sslmode=require e o prepareThreshold=0
+    url: "jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
+    username: "postgres.aexerqizcetzpgbeazmi"
 
-    # Credenciais explícitas e entre aspas para o Spring Boot não cortar a string
-    username: "postgres.swvuvmmtvasvnzilxqxl"
-    password: "Ma060507_DB2026"
+    # 3. Coloque a sua nova senha aqui, MANTENDO AS ASPAS DUPLAS por fora
+    password: "@DevGestorADM159753"
 
     driver-class-name: org.postgresql.Driver
-
     hikari:
       pool-name: VisionControlHikariPool
       maximum-pool-size: 15
@@ -16,6 +16,8 @@ spring:
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 20000
+
+  # ... restante do arquivo continua igual (jpa, rabbitmq, etc)
 
   jpa:
     hibernate:
@@ -39,7 +41,9 @@ spring:
 
 app:
   rabbitmq:
-    queue: rastreamos.entrada
+    queue: dados-telemetria
 
 server:
   port: 0
+  tomcat:
+    basedir: ./.tomcat
