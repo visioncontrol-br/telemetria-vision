@@ -33,7 +33,7 @@ public class RastreioConsumer {
 
             // 1ª Regra de Corte: O payload tem uma placa preenchida?
             if (dto.getPlate() == null || dto.getPlate().trim().isEmpty()) {
-                log.warn("Payload recebido sem Placa. Desviando para a tabela payload_desconhecido...");
+                log.warn("Payload recebido sem Placa. Desviando para a tabela payload...");
                 salvarComoPayload(messageText);
                 return;
             }
@@ -88,7 +88,7 @@ public class RastreioConsumer {
 
         } catch (Exception e) {
             // 3ª Regra de Corte: Erro de conversão de JSON
-            log.error("Falha de conversão ao processar telemetria. Desviando para a tabela payload_desconhecido. Motivo: {}", e.getMessage());
+            log.error("Falha de conversão ao processar telemetria. Desviando para a tabela payload. Motivo: {}", e.getMessage());
             salvarComoPayload(messageText);
         }
     }
@@ -102,7 +102,7 @@ public class RastreioConsumer {
             payloadEntity.setDadosBrutos(jsonGenerico);
 
             payloadRepository.save(payloadEntity);
-            log.info("Payload genérico salvo com sucesso na tabela payload_desconhecido.");
+            log.info("Payload genérico salvo com sucesso na tabela payload.");
         } catch (Exception ex) {
             log.error("Falha CRÍTICA: A mensagem recebida no RabbitMQ não é sequer um JSON válido. Descartando mensagem: {}", rawJsonText);
         }

@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "payload_desconhecido", schema = "public")
+@Table(name = "payload", schema = "public")
 public class PayloadEntity {
 
     @Id
