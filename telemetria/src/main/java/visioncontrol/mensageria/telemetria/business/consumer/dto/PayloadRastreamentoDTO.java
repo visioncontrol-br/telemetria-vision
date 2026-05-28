@@ -14,11 +14,10 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PayloadRastreamentoDTO {
 
-    @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss")
-    private LocalDateTime date;
-
+    private String date;
     private String event;
     private String plate;
+
     private BigDecimal speed;
     private Boolean gpsValid;
     private Boolean ignition;

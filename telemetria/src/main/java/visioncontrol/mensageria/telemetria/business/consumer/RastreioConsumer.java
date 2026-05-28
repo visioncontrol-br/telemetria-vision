@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
-
 import visioncontrol.mensageria.telemetria.business.consumer.dto.PayloadRastreamentoDTO;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.LatLongEmbeddable;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.PayloadEntity;
@@ -17,6 +16,7 @@ import visioncontrol.mensageria.telemetria.infrastructure.repository.TelemetriaR
 import visioncontrol.mensageria.telemetria.infrastructure.repository.VeiculosRepository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Component
 @Slf4j
@@ -28,26 +28,29 @@ public class RastreioConsumer {
     private final TelemetriaRepository telemetriaRepository;
     private final ObjectMapper objectMapper;
 
+    // Formatter estático para processar o padrão de data com barras "yyyy/MM/dd HH:mm:ss"
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+
     @RabbitListener(queues = "dados-telemetria")
     public void receber(String messageText) {
         try {
-            log.info("📥 Nova mensagem capturada da fila RabbitMQ: {}", messageText);
+            log.info("Nova mensagem capturada da fila RabbitMQ: {}", messageText);
 
             PayloadRastreamentoDTO dto = objectMapper.readValue(messageText, PayloadRastreamentoDTO.class);
-            log.info("✅ JSON convertido em DTO com sucesso. Placa recebida: '{}', Evento: '{}'", dto.getPlate(), dto.getEvent());
+            log.info("JSON convertido em DTO com sucesso. Placa recebida: '{}', Evento: '{}'", dto.getPlate(), dto.getEvent());
 
             // =========================================================================
             // 1ª REGRA DE CORTE: Validação de presença da Placa
             // =========================================================================
             if (dto.getPlate() == null || dto.getPlate().trim().isEmpty()) {
-                log.warn("⚠️ Payload rejeitado na 1ª Regra: Propriedade 'plate' veio vazia ou nula. Enviando para fallback...");
+                log.warn("Payload rejeitado na 1ª Regra: Propriedade 'plate' veio vazia ou nula. Enviando para fallback...");
                 salvarComoPayload(messageText);
                 return;
             }
 
             // Isolamento do texto da placa
             String placaTratada = dto.getPlate().split(" ")[0].trim();
-            log.info("🔍 Efetuando busca de Tenant no banco de dados pela placa tratada: '{}'", placaTratada);
+            log.info("Efetuando busca de Tenant no banco de dados pela placa tratada: '{}'", placaTratada);
 
             // =========================================================================
             // 2ª REGRA DE CORTE: Verificação de existência no Cadastro de Veículos
@@ -55,26 +58,34 @@ public class RastreioConsumer {
             VeiculosEntity veiculo = veiculoRepository.findByPlate(placaTratada).orElse(null);
 
             if (veiculo == null) {
-                log.warn("⚠️ Payload rejeitado na 2ª Regra: A placa '{}' NÃO possui cadastro no sistema. Enviando para fallback...", placaTratada);
+                log.warn("Payload rejeitado na 2ª Regra: A placa '{}' NAO possui cadastro no sistema. Enviando para fallback...", placaTratada);
                 salvarComoPayload(messageText);
                 return;
             }
 
-            log.info("🏢 Veículo validado! Vinculado à Empresa (Tenant ID): {}", veiculo.getEmpresaId());
-
-            LocalDateTime dataEvento = dto.getDate() != null ? dto.getDate() : LocalDateTime.now();
+            log.info("Veiculo validado! Vinculado a Empresa (Tenant ID): {}", veiculo.getEmpresaId());
 
             // =========================================================================
-            // PROCESSAMENTO UNIFICADO (Tudo converge para a linha do tempo em TelemetriaEntity)
+            // CONVERSÃO MANUAL DA DATA (Evita falhas de deserialização do Jackson)
             // =========================================================================
-            log.info("🚀 Persistindo evento '{}' da placa '{}' na tabela única de telemetria...", dto.getEvent(), placaTratada);
+            LocalDateTime dataEvento;
+            if (dto.getDate() != null && !dto.getDate().trim().isEmpty()) {
+                dataEvento = LocalDateTime.parse(dto.getDate(), DATE_FORMATTER);
+            } else {
+                dataEvento = LocalDateTime.now();
+            }
+
+            // =========================================================================
+            // PROCESSAMENTO UNIFICADO (Persistência centralizada em TelemetriaEntity)
+            // =========================================================================
+            log.info("Persistindo evento '{}' da placa '{}' na tabela unica de telemetria...", dto.getEvent(), placaTratada);
             salvarDadosConsolidados(dto, veiculo, dataEvento);
 
         } catch (Exception e) {
             // =========================================================================
             // 3ª REGRA DE CORTE: Erros genéricos de runtime
             // =========================================================================
-            log.error("💥 Erro crítico no fluxo de processamento. Desviando payload. Motivo: {}", e.getMessage());
+            log.error("Erro critico no fluxo de processamento. Desviando payload. Motivo: {}", e.getMessage());
             e.printStackTrace();
             salvarComoPayload(messageText);
         }
@@ -83,24 +94,24 @@ public class RastreioConsumer {
     private void salvarDadosConsolidados(PayloadRastreamentoDTO dto, VeiculosEntity veiculo, LocalDateTime dataEvento) {
         TelemetriaEntity entity = new TelemetriaEntity();
 
-        // CORREÇÃO CRÍTICA: Carimbando as chaves de relacionamento e Multi-Tenant
-        if(veiculo.getEmpresaId() != null){
-            entity.setEmpresaId(veiculo.getEmpresaId());// Vínculo da Empresa dona da Frota
+        // Atribuição das chaves de relacionamento e Multi-Tenant (Tipos Integer alinhados)
+        if (veiculo.getEmpresaId() != null) {
+            entity.setEmpresaId(veiculo.getEmpresaId());
         }
-        if(veiculo.getId() != null){
+        if (veiculo.getId() != null) {
             entity.setVeiculoId(veiculo.getId());
         }
 
         // Dados Base do Rastreamento
         entity.setDate(dataEvento);
         entity.setEvent(dto.getEvent());
-        entity.setPlate(veiculo.getPlate()); // Garante o salvamento da placa limpa padronizada
+        entity.setPlate(veiculo.getPlate()); // Garante o salvamento da placa padronizada do banco
         entity.setDriver(dto.getDriver());
         entity.setGpsValid(dto.getGpsValid());
         entity.setIgnition(dto.getIgnition());
         entity.setIdTracking(dto.getIdTracking());
 
-        // Conversões numéricas seguras de dados comuns
+        // Conversões numéricas seguras de BigDecimal para tipos primitivos/wrappers
         entity.setSpeed(dto.getSpeed() != null ? dto.getSpeed().intValue() : null);
         entity.setOdometer(dto.getOdometer() != null ? dto.getOdometer().longValue() : null);
         entity.setBatteryVoltage(dto.getBatteryVoltage() != null ? dto.getBatteryVoltage().doubleValue() : null);
@@ -113,10 +124,7 @@ public class RastreioConsumer {
             entity.setLatLong(embeddable);
         }
 
-        // =========================================================================
-        // CONDICIONAL: Se houver telemetria avançada no JSON, nós populamos os campos.
-        // Se não houver (evento POSITION), as colunas tel_ abaixo ficarão NULL no banco.
-        // =========================================================================
+        // Condicional: Se houver telemetria avançada no JSON, os campos específicos são populados
         if (dto.getTelemetria() != null) {
             PayloadRastreamentoDTO.TelemetriaInternalDTO telDto = dto.getTelemetria();
 
@@ -139,7 +147,7 @@ public class RastreioConsumer {
         }
 
         telemetriaRepository.save(entity);
-        log.info("💾 [SUCESSO] Linha do tempo atualizada na tabela 'telemetria' para a placa {}.", veiculo.getPlate());
+        log.info("[SUCESSO] Linha do tempo atualizada na tabela 'telemetria' para a placa {}.", veiculo.getPlate());
     }
 
     private void salvarComoPayload(String rawJsonText) {
@@ -150,9 +158,9 @@ public class RastreioConsumer {
             payloadEntity.setDadosBrutos(jsonGenerico);
 
             payloadRepository.save(payloadEntity);
-            log.info("📁 [FALLBACK] Dados persistidos cruamente na tabela genérica 'payload'.");
+            log.info("[FALLBACK] Dados persistidos cruamente na tabela generica 'payload'.");
         } catch (Exception ex) {
-            log.error("❌ Falha crítica de Sintaxe: O payload recebido não é sequer um formato JSON válido.");
+            log.error("Falha critica de Sintaxe: O payload recebido nao e um formato JSON valido.");
         }
     }
 }
