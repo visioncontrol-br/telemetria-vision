@@ -2,6 +2,8 @@ package visioncontrol.mensageria.telemetria.business.dto;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -12,7 +14,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PayloadRastreamentoDTO {
 
-    private String date; // Confirmado como String
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String date;
+    // Confirmado como String
     private String event;
     private String plate;
     private BigDecimal speed;
