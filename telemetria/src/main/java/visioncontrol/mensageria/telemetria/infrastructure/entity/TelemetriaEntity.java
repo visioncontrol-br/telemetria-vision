@@ -21,6 +21,12 @@ public class TelemetriaEntity {
     @Column(name = "data_evento")
     private LocalDateTime date;
 
+    @Column(name = "empresa_id")
+    private Long empresaId;
+
+    @Column(name = "veiculo_id")
+    private UUID veiculoId;
+
     private String event;
     private String plate;
     private Integer speed;
