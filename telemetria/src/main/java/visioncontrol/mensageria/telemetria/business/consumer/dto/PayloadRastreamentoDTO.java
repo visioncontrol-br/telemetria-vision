@@ -1,6 +1,7 @@
 package visioncontrol.mensageria.telemetria.business.consumer.dto;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
@@ -13,7 +14,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PayloadRastreamentoDTO {
 
+    @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDateTime date;
+
     private String event;
     private String plate;
     private BigDecimal speed;
