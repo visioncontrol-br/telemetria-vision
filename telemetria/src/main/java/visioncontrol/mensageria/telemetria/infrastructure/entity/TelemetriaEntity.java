@@ -22,10 +22,10 @@ public class TelemetriaEntity {
     private LocalDateTime date;
 
     @Column(name = "empresa_id")
-    private Long empresaId;
+    private Integer empresaId;
 
     @Column(name = "veiculo_id")
-    private UUID veiculoId;
+    private Integer veiculoId;
 
     private String event;
     private String plate;

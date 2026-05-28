@@ -84,8 +84,12 @@ public class RastreioConsumer {
         TelemetriaEntity entity = new TelemetriaEntity();
 
         // CORREÇÃO CRÍTICA: Carimbando as chaves de relacionamento e Multi-Tenant
-        entity.setEmpresaId(veiculo.getEmpresaId()); // Vínculo da Empresa dona da Frota
-        entity.setVeiculoId(veiculo.getId());       // Vínculo ID do Veículo
+        if(veiculo.getEmpresaId() != null){
+            entity.setEmpresaId(veiculo.getEmpresaId());// Vínculo da Empresa dona da Frota
+        }
+        if(veiculo.getId() != null){
+            entity.setVeiculoId(veiculo.getId());
+        }
 
         // Dados Base do Rastreamento
         entity.setDate(dataEvento);
