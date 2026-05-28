@@ -72,6 +72,7 @@ public class RastreioConsumer {
 
         } catch (Exception e) {
             log.error("Falha ao processar telemetria. Desviando para a tabela payload. Motivo: {}", e.getMessage(), e);
+            e.printStackTrace();
             salvarComoPayload(messageText);
         }
     }
