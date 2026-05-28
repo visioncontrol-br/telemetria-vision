@@ -34,24 +34,24 @@ public class RastreioConsumer {
     @RabbitListener(queues = "dados-telemetria")
     public void receber(String messageText) {
         try {
-            log.info("📥 Nova mensagem capturada da fila RabbitMQ: {}", messageText);
+            log.info("Nova mensagem capturada da fila RabbitMQ: {}", messageText);
 
             // Deserialização (O @JsonFormat adicionado no DTO resolve o parse da data com barras)
                 PayloadRastreamentoDTO dto = objectMapper.readValue(messageText, PayloadRastreamentoDTO.class);
-            log.info("✅ JSON convertido em DTO com sucesso. Placa recebida: '{}', Evento: '{}'", dto.getPlate(), dto.getEvent());
+            log.info("JSON convertido em DTO com sucesso. Placa recebida: '{}', Evento: '{}'", dto.getPlate(), dto.getEvent());
 
             // =========================================================================
             // 1ª REGRA DE CORTE: Validação de presença da Placa
             // =========================================================================
             if (dto.getPlate() == null || dto.getPlate().trim().isEmpty()) {
-                log.warn("⚠️ Payload rejeitado na 1ª Regra: Propriedade 'plate' veio vazia ou nula. Enviando para fallback...");
+                log.warn("Payload rejeitado na 1ª Regra: Propriedade 'plate' veio vazia ou nula. Enviando para fallback...");
                 salvarComoPayload(messageText);
                 return;
             }
 
             // Tratamento preventivo para isolar o texto da placa (Ex: "SCT5G36 - TELEMETRIA" -> "SCT5G36")
             String placaTratada = dto.getPlate().split(" ")[0].trim();
-            log.info("🔍 Efetuando busca de Tenant no banco de dados pela placa tratada: '{}'", placaTratada);
+            log.info("Efetuando busca de Tenant no banco de dados pela placa tratada: '{}'", placaTratada);
 
             // =========================================================================
             // 2ª REGRA DE CORTE: Verificação de existência no Cadastro de Veículos
@@ -59,12 +59,12 @@ public class RastreioConsumer {
             VeiculosEntity veiculo = veiculoRepository.findByPlate(placaTratada).orElse(null);
 
             if (veiculo == null) {
-                log.warn("⚠️ Payload rejeitado na 2ª Regra: A placa '{}' NÃO possui cadastro no sistema. Enviando para fallback...", placaTratada);
+                log.warn("Payload rejeitado na 2ª Regra: A placa '{}' NÃO possui cadastro no sistema. Enviando para fallback...", placaTratada);
                 salvarComoPayload(messageText);
                 return;
             }
 
-            log.info("🏢 Veículo validado! Vinculado à Empresa (Tenant ID): {}", veiculo.getEmpresaId());
+            log.info("Veículo validado! Vinculado à Empresa (Tenant ID): {}", veiculo.getEmpresaId());
 
             // Captura a data tratada do DTO. Caso venha nula por alguma anomalia, adota o horário atual.
             LocalDateTime dataEvento = dto.getDate() != null ? dto.getDate() : LocalDateTime.now();
@@ -73,10 +73,10 @@ public class RastreioConsumer {
             // DIRECIONAMENTO DINÂMICO DE FLUXO (ESTRUTURA BASEADA NAS SUAS ENTITIES REAIS)
             // =========================================================================
             if (dto.getTelemetria() != null) {
-                log.info("🚀 Roteando dados de Telemetria Completa da placa {} para a tabela 'telemetria'...", placaTratada);
+                log.info("Roteando dados de Telemetria Completa da placa {} para a tabela 'telemetria'...", placaTratada);
                 salvarTelemetriaAvancada(dto, dataEvento);
             } else {
-                log.info("📍 Roteando dados de Posição Simples da placa {} para a tabela 'posicao_veiculo'...", placaTratada);
+                log.info("Roteando dados de Posição Simples da placa {} para a tabela 'posicao_veiculo'...", placaTratada);
                 salvarPosicaoSimples(dto, dataEvento);
             }
 
@@ -84,7 +84,7 @@ public class RastreioConsumer {
             // =========================================================================
             // 3ª REGRA DE CORTE: Erros genéricos de runtime (Tabelas erradas, colunas inválidas)
             // =========================================================================
-            log.error("💥 Erro crítico no fluxo de processamento. Desviando payload. Motivo: {}", e.getMessage());
+            log.error("Erro crítico no fluxo de processamento. Desviando payload. Motivo: {}", e.getMessage());
             e.printStackTrace(); // Cospe a pilha de erro detalhada no console para debug
             salvarComoPayload(messageText);
         }
@@ -113,7 +113,7 @@ public class RastreioConsumer {
         }
 
         posicoesRepository.save(entity);
-        log.info("💾 Posição geográfica registrada com sucesso no banco de dados.");
+        log.info("Posição geográfica registrada com sucesso no banco de dados.");
     }
 
     private void salvarTelemetriaAvancada(PayloadRastreamentoDTO dto, LocalDateTime dataEvento) {
@@ -159,7 +159,7 @@ public class RastreioConsumer {
         entity.setTelTotalCombustivel(telDto.getTotalCombustivel() != null ? telDto.getTotalCombustivel().longValue() : null);
 
         telemetriaRepository.save(entity);
-        log.info("💾 Registro completo de Telemetria Mecânica gravado com sucesso no banco de dados.");
+        log.info("Registro completo de Telemetria Mecânica gravado com sucesso no banco de dados.");
     }
 
     private void salvarComoPayload(String rawJsonText) {
@@ -170,9 +170,9 @@ public class RastreioConsumer {
             payloadEntity.setDadosBrutos(jsonGenerico);
 
             payloadRepository.save(payloadEntity);
-            log.info("📁 [FALLBACK] Dados persistidos cruamente na tabela genérica 'payload'.");
+            log.info("[FALLBACK] Dados persistidos cruamente na tabela genérica 'payload'.");
         } catch (Exception ex) {
-            log.error("❌ Falha crítica de Sintaxe: O payload recebido não é sequer um formato JSON válido. Descartando pacote.");
+            log.error("Falha crítica de Sintaxe: O payload recebido não é sequer um formato JSON válido. Descartando pacote.");
         }
     }
 }
