@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
-import visioncontrol.mensageria.telemetria.business.dto.PayloadRastreamentoDTO;
+import visioncontrol.mensageria.telemetria.business.consumer.dto.PayloadRastreamentoDTO;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.LatLongEmbeddable;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.PayloadEntity;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.TelemetriaEntity;
