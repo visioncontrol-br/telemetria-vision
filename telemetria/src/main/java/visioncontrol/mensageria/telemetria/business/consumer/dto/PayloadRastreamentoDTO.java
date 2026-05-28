@@ -1,12 +1,10 @@
-package visioncontrol.mensageria.telemetria.business.consumer.dto;
+package visioncontrol.mensageria.telemetria.business.dto;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,10 +12,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PayloadRastreamentoDTO {
 
-    private String date;
+    private String date; // Confirmado como String
     private String event;
     private String plate;
-
     private BigDecimal speed;
     private Boolean gpsValid;
     private Boolean ignition;
