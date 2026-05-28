@@ -1,11 +1,15 @@
 package visioncontrol.mensageria.telemetria.infrastructure.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "telemetria_avancada")
 public class TelemetriaEntity {

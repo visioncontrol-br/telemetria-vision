@@ -1,4 +1,4 @@
-package visioncontrol.mensageria.telemetria.business.dto;
+package visioncontrol.mensageria.telemetria.business.consumer.dto;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
