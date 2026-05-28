@@ -7,11 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import visioncontrol.mensageria.telemetria.business.consumer.dto.PayloadRastreamentoDTO;
-import visioncontrol.mensageria.telemetria.infrastructure.entity.LatLongEmbeddable;
-import visioncontrol.mensageria.telemetria.infrastructure.entity.PayloadEntity;
-import visioncontrol.mensageria.telemetria.infrastructure.entity.TelemetriaEntity;
-import visioncontrol.mensageria.telemetria.infrastructure.entity.VeiculosEntity;
+import visioncontrol.mensageria.telemetria.infrastructure.entity.*;
+
 import visioncontrol.mensageria.telemetria.infrastructure.repository.PayloadRepository;
+
+import visioncontrol.mensageria.telemetria.infrastructure.repository.PosicoesRepository;
 import visioncontrol.mensageria.telemetria.infrastructure.repository.TelemetriaRepository;
 import visioncontrol.mensageria.telemetria.infrastructure.repository.VeiculosRepository;
 
@@ -26,6 +26,7 @@ public class RastreioConsumer {
     private final VeiculosRepository veiculoRepository;
     private final PayloadRepository payloadRepository;
     private final TelemetriaRepository telemetriaRepository;
+    private final PosicoesRepository posicaoRepository; // <-- Novo repositório injetado
     private final ObjectMapper objectMapper;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -40,71 +41,55 @@ public class RastreioConsumer {
             // MOTOR DE ROTEAMENTO POR ESTRUTURA DO PAYLOAD
             // =========================================================================
             if (isEstruturaTelemetriaAvancada(rootNode)) {
-                log.info("[ROTEAMENTO] Estrutura identificada: TELEMETRIA AVANCADA.");
+                log.info("[ROTEAMENTO] Estrutura identificada: Módulo de Telemetria Avançada.");
                 processarComoTelemetria(rootNode, messageText);
             }
             else if (isEstruturaPosicaoSimples(rootNode)) {
-                log.info("[ROTEAMENTO] Estrutura identificada: POSICAO SIMPLES.");
-                processarComoTelemetria(rootNode, messageText); // Aqui você pode criar outro método/entidade no futuro
+                log.info("[ROTEAMENTO] Estrutura identificada: Módulo de Rastreio Veicular (Posições).");
+                processarComoPosicao(rootNode, messageText);
             }
-            // Adicione novos 'else if' aqui para novas tabelas e entidades no futuro!
             else {
-                log.warn("[ROTEAMENTO] Estrutura desconhecida! Nenhum padrao de Entidade atendeu aos requisitos.");
-                salvarComoPayload(messageText, "Estrutura de JSON nao compativel com as entidades conhecidas.");
+                log.warn("[ROTEAMENTO] Estrutura desconhecida! Desviando para Fallback.");
+                salvarComoPayload(messageText);
             }
 
         } catch (Exception e) {
             log.error("Erro critico no fluxo de processamento. Desviando payload. Motivo: {}", e.getMessage());
-            salvarComoPayload(messageText, "Falha critica durante o roteamento: " + e.getMessage());
+            e.printStackTrace();
+            salvarComoPayload(messageText);
         }
     }
 
     // =========================================================================
-    // REGRAS DE IDENTIFICAÇÃO DE ESTRUTURAS (ASSINATURAS DO JSON)
+    // IDENTIFICAÇÃO DE ASSINATURAS DO JSON
     // =========================================================================
-
     private boolean isEstruturaTelemetriaAvancada(JsonNode node) {
-        // Para ser considerada Avançada, PRECISA ter o nó "telemetria" e dados básicos
         return node.has("plate") && node.has("latLong") && node.has("telemetria");
     }
 
     private boolean isEstruturaPosicaoSimples(JsonNode node) {
-        // Para ser Posição Simples, tem que ter latitude/longitude, mas NÃO tem telemetria
         return node.has("plate") && node.has("latLong") && !node.has("telemetria");
     }
 
     // =========================================================================
-    // PROCESSADORES ESPECÍFICOS
+    // PROCESSADORES ESPECÍFICOS POR MÓDULO
     // =========================================================================
 
+    // 1. MÓDULO DE TELEMETRIA
     private void processarComoTelemetria(JsonNode rootNode, String messageText) throws Exception {
         String placaTratada = rootNode.get("plate").asText().split(" ")[0].trim();
-
-        // ⚠️ ALERTA DE ARQUITETURA SAAS:
-        // Mesmo roteando por estrutura, precisamos vincular ao Veículo/Empresa.
-        // Se a placa não existir no sistema, os dados ficam "órfãos" e quebram o Multi-Tenant.
         VeiculosEntity veiculo = veiculoRepository.findByPlate(placaTratada).orElse(null);
+
         if (veiculo == null) {
-            log.warn("Payload com estrutura valida, mas a placa '{}' nao existe no banco. Desviando para fallback...", placaTratada);
-            salvarComoPayload(messageText, "Placa invalida ou nao cadastrada: " + placaTratada);
+            log.warn("Placa '{}' não encontrada no sistema. Desviando Telemetria para fallback...", placaTratada);
+            salvarComoPayload(messageText);
             return;
         }
 
-        // Parse da Data
-        String dateRaw = rootNode.has("date") ? rootNode.get("date").asText() : null;
-        LocalDateTime dataEvento = (dateRaw != null && !dateRaw.trim().isEmpty())
-                ? LocalDateTime.parse(dateRaw, DATE_FORMATTER)
-                : LocalDateTime.now();
-
-        // Agora sim convertemos para o DTO específico desta rota
         PayloadRastreamentoDTO dto = objectMapper.readValue(messageText, PayloadRastreamentoDTO.class);
+        LocalDateTime dataEvento = parseData(dto.getDate());
 
-        salvarDadosConsolidados(dto, veiculo, dataEvento);
-    }
-
-    private void salvarDadosConsolidados(PayloadRastreamentoDTO dto, VeiculosEntity veiculo, LocalDateTime dataEvento) {
         TelemetriaEntity entity = new TelemetriaEntity();
-
         if (veiculo.getEmpresaId() != null) entity.setEmpresaId(veiculo.getEmpresaId());
         if (veiculo.getId() != null) entity.setVeiculoId(veiculo.getId());
 
@@ -145,18 +130,66 @@ public class RastreioConsumer {
         }
 
         telemetriaRepository.save(entity);
-        log.info("[SUCESSO] Linha do tempo atualizada na tabela oficial para a placa {}.", veiculo.getPlate());
+        log.info("[SUCESSO] Dados salvos na tabela oficial de TELEMETRIA para a placa {}.", veiculo.getPlate());
     }
 
-    private void salvarComoPayload(String rawJsonText, String motivo) {
+    // 2. MÓDULO DE RASTREIO VEICULAR
+    private void processarComoPosicao(JsonNode rootNode, String messageText) throws Exception {
+        String placaTratada = rootNode.get("plate").asText().split(" ")[0].trim();
+        VeiculosEntity veiculo = veiculoRepository.findByPlate(placaTratada).orElse(null);
+
+        if (veiculo == null) {
+            log.warn("Placa '{}' não encontrada no sistema. Desviando Posição para fallback...", placaTratada);
+            salvarComoPayload(messageText);
+            return;
+        }
+
+        PayloadRastreamentoDTO dto = objectMapper.readValue(messageText, PayloadRastreamentoDTO.class);
+        LocalDateTime dataEvento = parseData(dto.getDate());
+
+        PosicoesEntity entity = new PosicoesEntity();
+        if (veiculo.getEmpresaId() != null) entity.setEmpresaId(veiculo.getEmpresaId());
+        if (veiculo.getId() != null) entity.setVeiculoId(veiculo.getId());
+
+        entity.setDate(dataEvento);
+        entity.setEvent(dto.getEvent());
+        entity.setPlate(veiculo.getPlate());
+        entity.setDriver(dto.getDriver());
+        entity.setGpsValid(dto.getGpsValid());
+        entity.setIgnition(dto.getIgnition());
+        entity.setIdTracking(dto.getIdTracking());
+
+        entity.setSpeed(dto.getSpeed() != null ? dto.getSpeed().intValue() : null);
+        entity.setOdometer(dto.getOdometer() != null ? dto.getOdometer().longValue() : null);
+        entity.setBatteryVoltage(dto.getBatteryVoltage() != null ? dto.getBatteryVoltage().doubleValue() : null);
+
+        if (dto.getLatLong() != null) {
+            LatLongEmbeddable embeddable = new LatLongEmbeddable();
+            embeddable.setLatitude(dto.getLatLong().getLatitude() != null ? dto.getLatLong().getLatitude().doubleValue() : null);
+            embeddable.setLongitude(dto.getLatLong().getLongitude() != null ? dto.getLatLong().getLongitude().doubleValue() : null);
+            entity.setLatLong(embeddable);
+        }
+
+        posicaoRepository.save(entity);
+        log.info("[SUCESSO] Dados salvos na tabela oficial de POSIÇÕES (Rastreio) para a placa {}.", veiculo.getPlate());
+    }
+
+    // =========================================================================
+    // UTILITÁRIOS E FALLBACK
+    // =========================================================================
+
+    private LocalDateTime parseData(String dateRaw) {
+        if (dateRaw != null && !dateRaw.trim().isEmpty()) {
+            return LocalDateTime.parse(dateRaw, DATE_FORMATTER);
+        }
+        return LocalDateTime.now();
+    }
+
+    private void salvarComoPayload(String rawJsonText) {
         try {
             JsonNode jsonGenerico = objectMapper.readTree(rawJsonText);
             PayloadEntity payloadEntity = new PayloadEntity();
-
-            // Você pode até salvar o motivo no banco futuramente para ajudar no debug
-            log.warn("[FALLBACK DISPARADO] {}", motivo);
             payloadEntity.setDadosBrutos(jsonGenerico);
-
             payloadRepository.save(payloadEntity);
             log.info("[FALLBACK] Dados persistidos cruamente na tabela generica 'payload'.");
         } catch (Exception ex) {

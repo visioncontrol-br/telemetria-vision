@@ -11,7 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "posicao_veiculo")
+@Table(name = "posicoes", schema = "public")
 public class PosicoesEntity {
 
     @Id
@@ -21,28 +21,30 @@ public class PosicoesEntity {
     @Column(name = "data_evento")
     private LocalDateTime date;
 
+    @Column(name = "empresa_id")
+    private Integer empresaId;
+
+    @Column(name = "veiculo_id")
+    private Integer veiculoId;
+
     private String event;
     private String plate;
     private Integer speed;
     private String driver;
 
     @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "angulo", column = @Column(name = "gps_angulo")),
-            @AttributeOverride(name = "latitude", column = @Column(name = "gps_latitude")),
-            @AttributeOverride(name = "longitude", column = @Column(name = "gps_longitude")),
-            @AttributeOverride(name = "proximidade", column = @Column(name = "gps_proximidade")),
-            @AttributeOverride(name = "doubleLatitude", column = @Column(name = "gps_double_latitude")),
-            @AttributeOverride(name = "doubleLongitude", column = @Column(name = "gps_double_longitude"))
-    })
     private LatLongEmbeddable latLong;
 
+    @Column(name = "gps_valid")
     private Boolean gpsValid;
+
     private Boolean ignition;
     private Long odometer;
+
+    @Column(name = "id_tracking")
     private Long idTracking;
-    private String externalCode;
-    private String safeAreaName;
+
+    @Column(name = "battery_voltage")
     private Double batteryVoltage;
 
     @Column(name = "criado_em", updatable = false)
