@@ -11,7 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "telemetria", schema = "public")
+@Table(name = "telemetria_avancada", schema = "public")
 public class TelemetriaEntity {
 
     @Id
