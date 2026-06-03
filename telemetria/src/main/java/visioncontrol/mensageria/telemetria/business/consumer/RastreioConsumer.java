@@ -29,11 +29,16 @@ public class RastreioConsumer {
             JsonNode rootNode = objectMapper.readTree(payload);
 
             // Roteamento O(1) - Rápido e sem Reflection
-            if (rootNode.hasNonNull("telemetria")) {
+            if (rootNode.has("telemetria")) {
+                log.info("[ROTEAMENTO] Chave 'telemetria' identificada. Direcionando para tabela: telemetria_avancada.");
                 processor.processTelemetria(rootNode, payload);
-            } else if (rootNode.hasNonNull("latLong")) {
+
+            } else if (rootNode.has("latLong")) {
+                log.info("[ROTEAMENTO] Apenas chave 'latLong' identificada. Direcionando para tabela: posicoes.");
                 processor.processPosicao(rootNode, payload);
+
             } else {
+                log.warn("[ROTEAMENTO] Payload com estrutura desconhecida. Desviando para a tabela genérica de falhas.");
                 processor.processUnknown(payload);
             }
 
