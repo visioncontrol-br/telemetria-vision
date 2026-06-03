@@ -135,7 +135,7 @@ public class TelemetryProcessor {
         if (veiculo.getEmpresaId() != null) entity.setEmpresaId(veiculo.getEmpresaId());
         if (veiculo.getId() != null) entity.setVeiculoId(veiculo.getId());
 
-        entity.setDate(parseData(dto.getDate()));
+        entity.setDataEvento(parseData(dto.getDate()));
         entity.setEvent(dto.getEvent());
         entity.setPlate(veiculo.getPlate());
         entity.setDriver(dto.getDriver());
@@ -147,10 +147,8 @@ public class TelemetryProcessor {
         entity.setBatteryVoltage(dto.getBatteryVoltage() != null ? dto.getBatteryVoltage().doubleValue() : null);
 
         if (dto.getLatLong() != null) {
-            LatLongEmbeddable emb = new LatLongEmbeddable();
-            emb.setLatitude(dto.getLatLong().getLatitude() != null ? dto.getLatLong().getLatitude().doubleValue() : null);
-            emb.setLongitude(dto.getLatLong().getLongitude() != null ? dto.getLatLong().getLongitude().doubleValue() : null);
-            entity.setLatLong(emb);
+            entity.setLatitude(dto.getLatLong().getLatitude() != null ? dto.getLatLong().getLatitude().doubleValue() : null);
+            entity.setLongitude(dto.getLatLong().getLongitude() != null ? dto.getLatLong().getLongitude().doubleValue() : null);
         }
     }
 
