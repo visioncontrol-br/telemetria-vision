@@ -1,4 +1,7 @@
 spring:
+  main:
+    web-application-type: none
+
   datasource:
     # 1. Mudamos a porta de 5432 para 6543 (Porta oficial do Pooler IPv4 do Supabase)
     # 2. Mantemos o sslmode=require e o prepareThreshold=0
