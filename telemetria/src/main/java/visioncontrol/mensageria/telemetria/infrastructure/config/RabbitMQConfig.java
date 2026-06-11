@@ -1,6 +1,9 @@
 package visioncontrol.mensageria.telemetria.infrastructure.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,52 +16,52 @@ public class RabbitMQConfig {
     @Value("${app.rabbitmq.queue}")
     private String queueName;
 
-    // 1. Fila Principal (com regras apontando para a DLQ em caso de falha)
+    @Value("${app.rabbitmq.exchange}")
+    private String exchangeName;
+
+    @Value("${app.rabbitmq.routing-key}")
+    private String routingKey;
+
+    // =========================================================
+    // 1. INFRAESTRUTURA DO RABBITMQ (CRIAÇÃO AUTOMÁTICA)
+    // =========================================================
+
     @Bean
-    public Queue principalQueue() {
-        return QueueBuilder.durable(queueName)
-                .withArgument("x-dead-letter-exchange", "telemetria.dlx")
-                .withArgument("x-dead-letter-routing-key", "telemetria.dlq.key")
-                .build();
+    public Queue filaTelemetria() {
+        // O "true" indica que a fila é durável (sobrevive a reinicializações da VPS)
+        return new Queue(queueName, true);
     }
 
-    // 2. Fila de Mensagens Mortas (DLQ)
     @Bean
-    public Queue deadLetterQueue() {
-        return QueueBuilder.durable(queueName + "-dlq").build();
+    public DirectExchange exchangeTelemetria() {
+        return new DirectExchange(exchangeName);
     }
 
-    // 3. Exchange da DLQ
     @Bean
-    public DirectExchange deadLetterExchange() {
-        return new DirectExchange("telemetria.dlx");
+    public Binding bindingTelemetria(Queue filaTelemetria, DirectExchange exchangeTelemetria) {
+        // Liga a Exchange à Fila usando a chave de roteamento
+        return BindingBuilder.bind(filaTelemetria).to(exchangeTelemetria).with(routingKey);
     }
 
-    // 4. Conectando a DLQ ao Exchange
-    @Bean
-    public Binding deadLetterBinding(Queue deadLetterQueue, DirectExchange deadLetterExchange) {
-        return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with("telemetria.dlq.key");
-    }
+    // =========================================================
+    // 2. CONFIGURAÇÃO DE CONSUMO EM LOTE (BATCHING)
+    // =========================================================
 
-    @Bean(name = "rabbitBatchContainerFactory")
+    @Bean
     public SimpleRabbitListenerContainerFactory rabbitBatchContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-
         factory.setConnectionFactory(connectionFactory);
 
-        // 1. Liga o modo de escuta em lote (List<Message>)
+        // Ativa o modo de escuta em lotes (necessário para receber List<Message> no Consumer)
         factory.setBatchListener(true);
 
-        // 2. Define o tamanho máximo de mensagens que o Java vai puxar por vez
+        // Ativa a quebra em lotes no nível do consumidor
+        factory.setConsumerBatchEnabled(true);
+
+        // Define o tamanho do lote. Ele vai pegar 100 mensagens de uma vez ou o que tiver na fila.
+        // Isso é fundamental para passar no Teste de Pico (Spike Testing) dos 1000 veículos.
         factory.setBatchSize(100);
 
-        // 3. Define quantas mensagens ficam retidas no buffer do consumidor na rede
-        factory.setPrefetchCount(100);
-
-        // 4. Garante que o ACK manual funcione corretamente para o lote inteiro
-        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-
         return factory;
-
     }
 }
