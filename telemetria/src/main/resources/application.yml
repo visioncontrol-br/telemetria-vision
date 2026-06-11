@@ -52,6 +52,6 @@ app:
     routing-key: "visioncontrol.routing.key"
 
 server:
-  port: 0
+  port: 8080
   tomcat:
     basedir: ./.tomcat
