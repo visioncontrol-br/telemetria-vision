@@ -1,6 +1,6 @@
 spring:
   main:
-    web-application-type: none
+    web-application-type: servlet
 
   datasource:
     # 1. Mudamos a porta de 5432 para 6543 (Porta oficial do Pooler IPv4 do Supabase)
