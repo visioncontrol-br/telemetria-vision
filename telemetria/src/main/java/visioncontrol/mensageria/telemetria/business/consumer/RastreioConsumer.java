@@ -1,54 +1,52 @@
 package visioncontrol.mensageria.telemetria.business.consumer;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import visioncontrol.mensageria.telemetria.business.consumer.processor.TelemetryProcessor;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class RastreioConsumer {
 
-    private final ObjectMapper objectMapper;
-    private final TelemetryProcessor processor; // Classe que vai conter a lógica de negócio
+    private final JdbcTemplate jdbcTemplate;
 
-    // Lendo o nome da fila do application.yml dinamicamente
-    @RabbitListener(queues = "${app.rabbitmq.queue}", ackMode = "MANUAL")
-    public void receber(Message message, Channel channel) throws IOException {
-        long deliveryTag = message.getMessageProperties().getDeliveryTag();
+    @RabbitListener(
+            queues = "${app.rabbitmq.queue}",
+            ackMode = "MANUAL",
+            containerFactory = "rabbitBatchContainerFactory"
+    )
+    public void receberLote(List<Message> messages, Channel channel) throws IOException {
+        long lastDeliveryTag = messages.get(messages.size() - 1).getMessageProperties().getDeliveryTag();
+
         try {
-            String payload = new String(message.getBody());
-            JsonNode rootNode = objectMapper.readTree(payload);
+            // Dispara o lote de Strings brutas para a função do Postgres
+            jdbcTemplate.batchUpdate(
+                    "SELECT public.rotear_payload_veiculo(?::jsonb)",
+                    messages,
+                    messages.size(),
+                    (ps, message) -> {
+                        String jsonBruto = new String(message.getBody(), StandardCharsets.UTF_8);
+                        ps.setString(1, jsonBruto);
+                    }
+            );
 
-            // Roteamento O(1) - Rápido e sem Reflection
-            if (rootNode.has("telemetria")) {
-                log.info("[ROTEAMENTO] Chave 'telemetria' identificada. Direcionando para tabela: telemetria_avancada.");
-                processor.processTelemetria(rootNode, payload);
-
-            } else if (rootNode.has("latLong")) {
-                log.info("[ROTEAMENTO] Apenas chave 'latLong' identificada. Direcionando para tabela: posicoes.");
-                processor.processPosicao(rootNode, payload);
-
-            } else {
-                log.warn("[ROTEAMENTO] Payload com estrutura desconhecida. Desviando para a tabela genérica de falhas.");
-                processor.processUnknown(payload);
-            }
-
-            // Confirma o sucesso para o RabbitMQ deletar a fila
-            channel.basicAck(deliveryTag, false);
+            // Confirma o lote inteiro no RabbitMQ de uma vez só
+            channel.basicAck(lastDeliveryTag, true);
+            log.info("[SUCESSO] Lote de {} mensagens processado pelo PostgreSQL.", messages.size());
 
         } catch (Exception e) {
-            log.error("Erro ao processar mensagem. Enviando para DLQ.", e);
-            // Rejeita a mensagem (false para não voltar pra mesma fila, vai para a DLQ)
-            channel.basicNack(deliveryTag, false, false);
+            log.error("Erro no lote de mensagens. Enviando bloco para a DLQ.", e);
+            // Em caso de qualquer erro de banco, o lote inteiro vai para a DLQ para auditoria
+            channel.basicNack(lastDeliveryTag, true, false);
         }
     }
 }

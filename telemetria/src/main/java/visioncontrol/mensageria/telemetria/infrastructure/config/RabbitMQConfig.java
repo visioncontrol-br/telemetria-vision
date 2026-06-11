@@ -1,6 +1,8 @@
 package visioncontrol.mensageria.telemetria.infrastructure.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,5 +38,27 @@ public class RabbitMQConfig {
     @Bean
     public Binding deadLetterBinding(Queue deadLetterQueue, DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with("telemetria.dlq.key");
+    }
+
+    @Bean(name = "rabbitBatchContainerFactory")
+    public SimpleRabbitListenerContainerFactory rabbitBatchContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+
+        factory.setConnectionFactory(connectionFactory);
+
+        // 1. Liga o modo de escuta em lote (List<Message>)
+        factory.setBatchListener(true);
+
+        // 2. Define o tamanho máximo de mensagens que o Java vai puxar por vez
+        factory.setBatchSize(100);
+
+        // 3. Define quantas mensagens ficam retidas no buffer do consumidor na rede
+        factory.setPrefetchCount(100);
+
+        // 4. Garante que o ACK manual funcione corretamente para o lote inteiro
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+
+        return factory;
+
     }
 }
