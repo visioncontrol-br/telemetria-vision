@@ -1,4 +1,4 @@
-package visioncontrol.mensageria.telemetria.api.controller;
+package visioncontrol.mensageria.telemetria.infrastructure;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
