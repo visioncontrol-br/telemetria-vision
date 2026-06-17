@@ -3,13 +3,11 @@ spring:
     web-application-type: servlet
 
   datasource:
-    url: "jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
-    username: "postgres.aexerqizcetzpgbeazmi"
-
-    # 3. Coloque a sua nova senha aqui, MANTENDO AS ASPAS DUPLAS por fora
-    password: "@DevGestorADM159753"
-
+    url: "jdbc:postgresql://localhost:5432/torredecontrole"
+    username: "postgres"
+    password: "0605"
     driver-class-name: org.postgresql.Driver
+
     hikari:
       pool-name: VisionControlHikariPool
       maximum-pool-size: 15
@@ -47,6 +45,7 @@ app:
     queue: "fila-visioncontrol-prod"
     exchange: "visioncontrol-exchange"
     routing-key: "visioncontrol.routing.key"
+    dlq-queue: "fila-visioncontrol-prod-dlq"
 
 server:
   port: 8080
