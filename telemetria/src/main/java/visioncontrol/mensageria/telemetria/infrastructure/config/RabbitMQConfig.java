@@ -60,9 +60,7 @@ public class RabbitMQConfig {
 
         // Define o tamanho do lote. Ele vai pegar 100 mensagens de uma vez ou o que tiver na fila.
         // Isso é fundamental para passar no Teste de Pico (Spike Testing) dos 1000 veículos.
-        factory.setBatchSize(100);
-
-        factory.setReceiveTimeout(1000L);
+        factory.setBatchSize(50);
 
         return factory;
     }
