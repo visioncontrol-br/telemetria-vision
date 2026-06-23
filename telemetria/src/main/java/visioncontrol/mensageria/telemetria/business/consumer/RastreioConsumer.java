@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import visioncontrol.mensageria.telemetria.business.consumer.dto.RastreioPayloadDTO;
-import visioncontrol.mensageria.telemetria.business.consumer.service.RastreioService;
+
+// 👇 Import atualizado para a Service nova
+import visioncontrol.mensageria.telemetria.business.consumer.service.TelemetriaService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,9 +24,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RastreioConsumer {
 
-    private final RastreioService rastreioService;
+    // 👇 Injeção atualizada
+    private final TelemetriaService telemetriaService;
+
     private final ObjectMapper objectMapper;
-    private final RabbitTemplate rabbitTemplate; // Injetado para enviar à DLQ
+    private final RabbitTemplate rabbitTemplate;
 
     @Value("${app.rabbitmq.dlq-queue}")
     private String dlqQueue;
@@ -49,8 +53,8 @@ public class RastreioConsumer {
                     // 2. Parse do JSON para o DTO
                     RastreioPayloadDTO dto = objectMapper.readValue(jsonString, RastreioPayloadDTO.class);
 
-                    // 3. Processamento e Persistência na transação isolada do Service
-                    rastreioService.processarPosicao(dto);
+                    //  3. Processamento apontando para a nova tabela de telemetria
+                    telemetriaService.processarTelemetria(dto);
 
                 } catch (Exception e) {
                     // Nós relançamos o erro para dar NACK no lote inteiro e tentar novamente mais tarde.
@@ -64,7 +68,6 @@ public class RastreioConsumer {
                     rabbitTemplate.convertAndSend("", dlqQueue, jsonString);
                 }
             }
-
 
             // Mensagens processadas foram salvas no Postgres. Mensagens com erro foram para a DLQ.
             channel.basicAck(lastDeliveryTag, true);
