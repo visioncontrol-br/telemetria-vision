@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import visioncontrol.mensageria.telemetria.business.consumer.dto.VeiculoCacheDTO;
-import visioncontrol.mensageria.telemetria.business.consumer.service.RastreioService;
 import visioncontrol.mensageria.telemetria.infrastructure.entity.VeiculosEntity;
 import visioncontrol.mensageria.telemetria.infrastructure.repository.VeiculosRepository;
 

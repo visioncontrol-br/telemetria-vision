@@ -17,8 +17,8 @@ public class CacheConfig {
     public CacheManager cacheManager(){
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("veiculosCache");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES) // Invalida o staleness
-                .maximumSize(5000)); // Protege contra OOM
+                .expireAfterWrite(10, TimeUnit.MINUTES) // Limite de tempo
+                .maximumSize(5000)); // limite de espaço
         return cacheManager;
     }
 

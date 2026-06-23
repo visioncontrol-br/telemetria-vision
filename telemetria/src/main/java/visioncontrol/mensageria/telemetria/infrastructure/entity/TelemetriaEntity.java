@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -46,7 +47,7 @@ public class TelemetriaEntity {
     private BigDecimal longitude;
 
     @Column(name = "velocidade")
-    private BigDecimal velocidad;
+    private BigDecimal velocidade;
 
     @Column(name = "gps_valido")
     private Boolean gpsValido;
@@ -93,6 +94,84 @@ public class TelemetriaEntity {
     @Column(name = "loaded")
     private Boolean loaded;
 
+    // ==========================================
+    // NOVOS CAMPOS - TELEMETRIA AVANÇADA
+    // ==========================================
+
+    @Column(name = "angulo")
+    private Integer angulo;
+
+    @Column(name = "proximidade")
+    private String proximidade;
+
+    @Column(name = "codigo_externo")
+    private String codigoExterno;
+
+    @Column(name = "nome_area_segura")
+    private String nomeAreaSegura;
+
+    @Column(name = "tel_luz")
+    private String telLuz;
+
+    @Column(name = "tel_chuva")
+    private Integer telChuva;
+
+    @Column(name = "tel_marcha")
+    private String telMarcha;
+
+    @Column(name = "tel_portas")
+    private Boolean telPortas;
+
+    @Column(name = "tel_carga_bateria")
+    private Integer telCargaBateria;
+
+    @Column(name = "tel_temperatura_cabine")
+    private Integer telTemperaturaCabine;
+
+    @Column(name = "tel_temperatura_externa")
+    private Integer telTemperaturaExterna;
+
+    @Column(name = "tel_temperatura_arrefecimento")
+    private Integer telTemperaturaArrefecimento;
+
+    @Column(name = "tel_evento_rpm_in")
+    private Boolean telEventoRpmIn;
+
+    @Column(name = "tel_evento_rpm_out")
+    private Boolean telEventoRpmOut;
+
+    @Column(name = "tel_evento_speed_in")
+    private Boolean telEventoSpeedIn;
+
+    @Column(name = "tel_evento_speed_out")
+    private Boolean telEventoSpeedOut;
+
+    @Column(name = "tel_evento_ocioso_in")
+    private Boolean telEventoOciosoIn;
+
+    @Column(name = "tel_evento_ocioso_out")
+    private Boolean telEventoOciosoOut;
+
+    @Column(name = "tel_evento_banguela_in")
+    private Boolean telEventoBanguelaIn;
+
+    @Column(name = "tel_evento_banguela_out")
+    private Boolean telEventoBanguelaOut;
+
+    @Column(name = "tel_evento_chuva_speed_in")
+    private Boolean telEventoChuvaSpeedIn;
+
+    @Column(name = "tel_evento_chuva_speed_out")
+    private Boolean telEventoChuvaSpeedOut;
+
+    @Column(name = "tel_peso_segundo_eixo")
+    private Integer telPesoSegundoEixo;
+
+    @Column(name = "tel_peso_terceiro_eixo")
+    private Integer telPesoTerceiroEixo;
+
+    //ADICIONAIS
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "extra", columnDefinition = "jsonb")
     private String extra;
@@ -108,5 +187,4 @@ public class TelemetriaEntity {
 
     @Column(name = "criado_em", updatable = false, insertable = false)
     private Instant criadoEm;
-
 }

@@ -47,7 +47,7 @@ public class RastreioService {
         // 3. Monta a entidade de Posição
         PosicoesVeiculosEntity posicao = new PosicoesVeiculosEntity();
 
-        // 🔥 MÁGICA DO HIBERNATE: getReference cria proxies ocos. O Hibernate preenche a FK no INSERT sem dar SELECT!
+        //  MÁGICA DO HIBERNATE: getReference cria proxies ocos. O Hibernate preenche a FK no INSERT sem dar SELECT!
         posicao.setVeiculo(entityManager.getReference(VeiculosEntity.class, veiculoCached.id()));
         posicao.setEmpresa(entityManager.getReference(EmpresaEntity.class, veiculoCached.empresaId()));
 
